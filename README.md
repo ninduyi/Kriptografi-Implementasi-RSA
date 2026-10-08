@@ -189,17 +189,13 @@ Data formulir penggajian dikemas ke dalam struktur *Dictionary* Python, kemudian
 Syarat mutlak matematis RSA adalah nilai integer pesan $m$ **harus lebih kecil dari modulus $n$** ($m < n$). Jika $m \ge n$, hasil modulo akan memotong nilai asli dan data tidak dapat dipulihkan.
 
 Oleh karena itu, byte array dipecah menjadi blok-blok berukuran aman:
-$$B = \max\left(1, \left\lfloor \frac{\text{bits}(n) - 1}{8} \right\rfloor\right)$$
-*(Di mana $B$ adalah `block_size` dalam byte, dihitung dengan `max(1, (n.bit_length() - 1) // 8)`)*
-
+$$\text{block\_size} = \max\left(1, \left\lfloor \frac{\text{bit\_length}(n) - 1}{8} \right\rfloor\right)$$
 *Contoh:* Untuk modulus 128-bit, $\lfloor (128 - 1) / 8 \rfloor = 15$ byte per blok. Setiap potongan 15 byte dijamin merepresentasikan bilangan bulat $m_i < 2^{120} < n$.
 
 ### 3. Transformasi Matematika Enkripsi
 Untuk setiap blok $i$:
 1. Potongan byte dikonversi menjadi bilangan bulat (*Big-Endian*):
-   ```python
-   m_i = int.from_bytes(chunk_i, byteorder='big')
-   ```
+   $$m_i = \text{int.from\_bytes}(\text{chunk}_i, \text{byteorder} = \text{'big'})$$
 2. Hitung ciphertext $c_i$ menggunakan metode *Square-and-Multiply*:
    $$c_i = (m_i^e) \pmod n$$
 3. Nilai $c_i$ disimpan dalam format string desimal.
@@ -238,9 +234,7 @@ Untuk setiap blok ciphertext $c_i$:
 2. Hitung plaintext integer $m_i$ menggunakan rumus inversi RSA:
    $$m_i = (c_i^d) \pmod n$$
 3. Konversi integer $m_i$ kembali ke bentuk byte asli dengan panjang byte yang sesuai dari `block_lengths`:
-   ```python
-   chunk_i = m_i.to_bytes(length_i, byteorder='big')
-   ```
+   $$\text{chunk}_i = m_i.\text{to\_bytes}(\text{length}_i, \text{byteorder} = \text{'big'})$$
 4. Gabungkan seluruh `chunk_i` ke dalam satu `bytearray`.
 
 ### 3. Rekonstruksi & Proteksi Integritas Data
