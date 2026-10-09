@@ -23,7 +23,7 @@ from datetime import datetime
 # BAGIAN 1: RSA MATH ENGINE (DIKERJAKAN SECARA MANUAL DARI TEORI BILANGAN)
 # =============================================================================
 
-class RSAMathEngine:
+class RSAMathEngine:            # fungsi untuk memproses matematika RSA
     """
     Kelas mesin matematika RSA murni:
     1. Primality Test (Miller-Rabin)
@@ -34,14 +34,14 @@ class RSAMathEngine:
     """
 
     @staticmethod
-    def gcd(a: int, b: int) -> int:
+    def gcd(a: int, b: int) -> int:     # fungsi untuk mencari pembagi bersama terbesar (PBB / GCD) menggunakan Algoritma Euclidean.
         """Pembagi Bersama Terbesar (PBB / GCD) menggunakan Algoritma Euclidean."""
         while b != 0:
             a, b = b, a % b
         return a
 
     @staticmethod
-    def extended_gcd(a: int, b: int):
+    def extended_gcd(a: int, b: int):   # fungsi extended euclidean algorithm
         """
         Extended Euclidean Algorithm:
         Mencari nilai x dan y sedemikian sehingga: a*x + b*y = gcd(a, b)
@@ -54,9 +54,9 @@ class RSAMathEngine:
         return gcd_val, x, y
 
     @staticmethod
-    def mod_inverse(e: int, phi: int) -> int:
+    def mod_inverse(e: int, phi: int) -> int:   # Menghitung kunci privat d sebagai invers modulo e dan phi
         """
-        Menghitung Private Key d sebagai invers modulo:
+        Menghitung Private Key d sebagai invers modulo:     
         e * d = 1 (mod phi)
         """
         gcd_val, x, _ = RSAMathEngine.extended_gcd(e, phi)
@@ -65,7 +65,7 @@ class RSAMathEngine:
         return (x % phi + phi) % phi
 
     @staticmethod
-    def mod_pow(base: int, exp: int, mod: int) -> int:
+    def mod_pow(base: int, exp: int, mod: int) -> int:  # Menghitung perpangkatan modulo
         """
         Modular Exponentiation menggunakan metode Square-and-Multiply:
         Menghitung (base ^ exp) % mod secara efisien dalam O(log exp).
@@ -81,7 +81,7 @@ class RSAMathEngine:
         return result
 
     @staticmethod
-    def is_prime_miller_rabin(n: int, k: int = 10) -> bool:
+    def is_prime_miller_rabin(n: int, k: int = 10) -> bool:     # menguji keprimaan bilangan 
         """
         Uji Keprimaan Miller-Rabin manual:
         Menguji apakah n adalah bilangan prima secara probabilistik.
@@ -127,7 +127,7 @@ class RSAMathEngine:
             # Saring awal dengan bilangan prima kecil untuk efisiensi
             if any(p % sp == 0 and p != sp for sp in small_primes):
                 continue
-            if RSAMathEngine.is_prime_miller_rabin(p, k=15):
+            if RSAMathEngine.is_prime_miller_rabin(p, k=15):  # diuji pake algoritma miller rabin 15x
                 return p
 
     @classmethod
@@ -139,19 +139,19 @@ class RSAMathEngine:
         p = cls.generate_prime(bits)
         q = cls.generate_prime(bits)
         while p == q:
-            q = cls.generate_prime(bits)
+            q = cls.generate_prime(bits)        # memastikan nilai q berbeda dengan nilai p agar RSA berfungsi dengan baik
 
         n = p * q
-        phi = (p - 1) * (q - 1)
+        phi = (p - 1) * (q - 1)                 # menghitung fungsi Euler Totient.
 
         # Pemilihan e standar: 65537 atau dicari iteratif
         e = 65537
-        if cls.gcd(e, phi) != 1:
+        if cls.gcd(e, phi) != 1:                # memastikan e dan phi relatif prima.
             e = 3
             while cls.gcd(e, phi) != 1:
                 e += 2
 
-        d = cls.mod_inverse(e, phi)
+        d = cls.mod_inverse(e, phi)             # menghitung kunci privat d
         return p, q, n, phi, e, d
 
     @classmethod
@@ -163,19 +163,19 @@ class RSAMathEngine:
         # Ukuran blok byte maksimum: (bit_length - 1) // 8 byte
         # Menjamin secara matematis m_i < n
         block_size = max(1, (n.bit_length() - 1) // 8)
-        ciphertext_blocks = []
-        block_metadata = []
+        ciphertext_blocks = [] # menyimpan ciphertext hasil enkripsi
+        block_metadata = [] # meyimpan informasi tambahan, seperti indeks blok, panjang byte, plaintext integer,
 
-        for i in range(0, len(plaintext_bytes), block_size):
-            chunk = plaintext_bytes[i:i + block_size]
-            m_int = int.from_bytes(chunk, byteorder='big')
-            c_int = cls.mod_pow(m_int, e, n)
-            ciphertext_blocks.append(str(c_int))
+        for i in range(0, len(plaintext_bytes), block_size): # memecah data plaintext_bytes menjadi blok-blok kecil.
+            chunk = plaintext_bytes[i:i + block_size] #mengambil satu blok data dari plaintext.
+            m_int = int.from_bytes(chunk, byteorder='big') # mengubah blok data menjadi bilangan bulat
+            c_int = cls.mod_pow(m_int, e, n) # mengenkripsi bilangan bulat menggunakan RSA
+            ciphertext_blocks.append(str(c_int)) # menyimpan hasil enkripsi
             block_metadata.append({
-                "index": i // block_size,
-                "byte_len": len(chunk),
-                "m_int": m_int,
-                "c_int": c_int
+                "index": i // block_size, #Indeks blok
+                "byte_len": len(chunk), # Panjang byte
+                "m_int": m_int, # Plaintext integer
+                "c_int": c_int # Ciphertext integer
             })
 
         return ciphertext_blocks, block_size, block_metadata
@@ -187,19 +187,19 @@ class RSAMathEngine:
         m_i = (c_i ^ d) mod n
         Lalu merekonstruksi kembali byte aslinya.
         """
-        decrypted_bytes = bytearray()
-        trace_blocks = []
+        decrypted_bytes = bytearray() # digunakan untuk menyimpan hasil dekripsi dalam bentuk byte
+        trace_blocks = [] # digunakan untuk menyimpan informasi tambahan, seperti indeks blok, panjang byte, ciphertext integer, dan plaintext integer
 
-        for idx, (c_str, b_len) in enumerate(zip(ciphertext_blocks, block_sizes)):
-            c_int = int(c_str)
-            m_int = cls.mod_pow(c_int, d, n)
-            chunk = m_int.to_bytes(b_len, byteorder='big')
-            decrypted_bytes.extend(chunk)
+        for idx, (c_str, b_len) in enumerate(zip(ciphertext_blocks, block_sizes)): # mengiterasi setiap blok ciphertext dan panjang byte
+            c_int = int(c_str) # mengubah blok ciphertext menjadi bilangan bulat
+            m_int = cls.mod_pow(c_int, d, n) # mendekripsi bilangan bulat menggunakan RSA
+            chunk = m_int.to_bytes(b_len, byteorder='big') # mengubah blok data menjadi byte
+            decrypted_bytes.extend(chunk) # menambahkan blok data ke dalam decrypted_bytes
             trace_blocks.append({
                 "index": idx,
-                "c_int": c_int,
-                "m_int": m_int,
-                "byte_len": b_len
+                "c_int": c_int, # Ciphertext integer
+                "m_int": m_int, # Plaintext integer
+                "byte_len": b_len # Panjang byte
             })
 
         return bytes(decrypted_bytes), trace_blocks
@@ -657,11 +657,11 @@ class SecurePayrollApp(tk.Tk):
             block_lengths = self.loaded_encrypted_data["block_lengths"]
 
             # Dekripsi Blok RSA Manual
-            decrypted_bytes, trace = RSAMathEngine.decrypt_bytes(ciphertext_blocks, block_lengths, d, n)
+            decrypted_bytes, trace = RSAMathEngine.decrypt_bytes(ciphertext_blocks, block_lengths, d, n) # mengembalikan ciphertext menjadi byte asli.
 
             # Decode UTF-8 & Parse JSON
-            raw_json_str = decrypted_bytes.decode("utf-8")
-            payroll = json.loads(raw_json_str)
+            raw_json_str = decrypted_bytes.decode("utf-8") # mengubah byte menjadi string
+            payroll = json.loads(raw_json_str) # mengubah string menjadi json
 
             # Format Tampilan Kartu Slip Gaji
             self._render_payroll_card(payroll)
