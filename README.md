@@ -1,4 +1,4 @@
-# 🛡️ Sistem Slip Gaji Digital Terenkripsi Berbasis RSA (*Manual Implementation*)
+# 🛡️ Sistem Distribusi Slip Gaji yang Terenkripsi Berbasis RSA
 
 | No | Nama Lengkap | NRP |
 | :---: | :--- | :---: |
@@ -30,11 +30,11 @@
 
 ---
 
-## 📌 Ringkasan Eksekutif
+## 📌 Ringkasan
 
-Proyek ini merupakan aplikasi sistem slip gaji digital berbasis desktop yang mengimplementasikan algoritma kriptografi kunci publik **RSA (*Rivest–Shamir–Adleman*)** yang dibangun secara **manual dari nol (*from scratch*) tanpa menggunakan library kriptografi pihak ketiga** (seperti `pycryptodome`, `cryptography`, atau OpenSSL). Seluruh operasi teori bilangan—mulai dari pembangkitan bilangan prima acak, uji keprimaan Miller-Rabin, pencarian faktor pembagi terbesar (*GCD*), pencarian invers modulo dengan *Extended Euclidean Algorithm*, hingga eksponensiasi modular *Square-and-Multiply*—diimplementasikan secara murni menggunakan logika Python standar.
+Proyek ini merupakan aplikasi sistem distribusi slip gaji digital berbasis *python* yang mengimplementasikan algoritma kriptografi *Public Key* **RSA (*Rivest–Shamir–Adleman*)** yang dibangun *from scratch* tanpa menggunakan library kriptografi (seperti `pycryptodome`, `cryptography`, atau OpenSSL). Seluruh operasi teori bilangan; mulai dari pembangkitan bilangan prima acak, uji keprimaan Miller-Rabin, pencarian faktor pembagi terbesar (*GCD*), pencarian invers modulo dengan *Extended Euclidean Algorithm*, hingga eksponensiasi modular *Square-and-Multiply* diimplementasikan secara manual murni menggunakan logika Python.
 
-Aplikasi dilengkapi antarmuka grafis modern berbasis **Tkinter (`ttk`)** yang membagi hak akses ke dalam **Portal Karyawan**, **Portal HRD**, serta **RSA Math Inspector** (layar pemantau langkah perhitungan matematis secara langsung).
+Aplikasi dilengkapi dengan GUI modern berbasis **Tkinter (`ttk`)** yang membagi hak akses ke tiga portal: **Portal Karyawan**, **Portal HRD**, serta **RSA Math Inspector** (Log langkah perhitungan matematis).
 
 ---
 
@@ -47,15 +47,15 @@ Dalam operasional perusahaan modern, **Slip Gaji** adalah dokumen yang memuat da
 - Total pendapatan bersih (*Take Home Pay*).
 
 ### Masalah
-Jika slip gaji didistribusikan dalam format teks polos (*plaintext*) seperti file PDF atau JSON tanpa enkripsi melalui email atau jaringan internal, data tersebut rentan terhadap ancaman intersepsi (*sniffing/man-in-the-middle attack*) oleh pihak yang tidak berkepentingan maupun staf internal lainnya.
+Jika slip gaji didistribusikan dalam *plaintext* seperti file PDF atau JSON tanpa enkripsi, data tersebut rentan terhadap ancaman intersepsi (*sniffing/man-in-the-middle attack*).
 
 ### Solusi yang Diterapkan
 Menerapkan skema **Kriptografi Asimetris (Public-Key Cryptography)**:
-1. **Karyawan** bertindak sebagai penerima rahasia. Karyawan menghasilkan pasangan kunci: **Kunci Publik (*Public Key*)** dan **Kunci Privat (*Private Key*)**.
-2. **Kunci Publik Karyawan** diserahkan kepada pihak HRD untuk mengenkripsi data slip gaji. Siapa pun (termasuk HRD) dapat melihat kunci publik ini, namun kunci publik **hanya bisa digunakan untuk mengunci/mengenkripsi**, bukan membuka data.
-3. **Pihak HRD** menyusun rincian kompensasi, lalu mengenkripsi seluruh isi berkas gaji menggunakan *Public Key* karyawan tujuan, menghasilkan berkas `.enc`.
-4. Berkas `.enc` dapat didistribusikan dengan aman melalui media apa pun.
-5. **Hanya Karyawan bersangkutan** yang memegang *Private Key* pasangannya yang mampu mendekripsi dan menampilkan kembali slip gaji resmi secara utuh.
+1. **Karyawan** bertindak sebagai penerima rahasia. Karyawan perlu membuat pasangan kunci: **Kunci Publik (*Public Key*)** dan **Kunci Privat (*Private Key*)**.
+2. **Public Key Karyawan** diserahkan kepada HRD untuk mengenkripsi data slip gaji. Siapa pun (termasuk HRD) dapat melihat kunci publik ini, namun public key **hanya bisa digunakan untuk mengunci/mengenkripsi**, bukan membuka data.
+3. **HRD** kemudian menulis rincian gaji, lalu mengenkripsinya menggunakan *Public Key* karyawan tadi, yang menghasilkan file `.enc`.
+4. Berkas `.enc` bisa dishare dengan aman melalui media apa pun.
+5. **Hanya Karyawan tersebut** yang memegang *Private Key* pasangannya yang bisa mendekripsi dan menampilkan kembali slip gaji resmi secara utuh.
 
 ---
 
@@ -70,13 +70,13 @@ Keamanan RSA bersandar pada kesulitan matematis dalam memfaktorkan perkalian dua
 
 ---
 
-### Komponen Matematis Algoritma RSA
+### Komponen Algoritma RSA
 
 #### 1. Pembangkitan Kunci (*Key Generation*)
 1. Pilih dua bilangan prima acak yang berbeda, $p$ dan $q$.
 2. Hitung modulus $n$:
    $$n = p \times q$$
-   Nilai $n$ digunakan sebagai modulus untuk kunci publik dan kunci privat. Panjang bit $n$ menentukan kekuatan kunci (pada proyek ini dipilih $p$ dan $q$ berukuran 64-bit sehingga modulus $n$ berukuran $\approx 128$ bit).
+   Nilai $n$ digunakan sebagai modulus untuk public key dan private key. Panjang bit $n$ menentukan kekuatan kunci (pada proyek ini dipilih $p$ dan $q$ berukuran 64-bit sehingga modulus $n$ berukuran $\approx 128$ bit).
 3. Hitung fungsi *Euler’s Totient* $\phi(n)$:
    $$\phi(n) = (p - 1) \times (q - 1)$$
 4. Tentukan eksponen publik $e$ sedemikian rupa sehingga:
@@ -126,37 +126,79 @@ Menghitung $(base^{exp}) \pmod{mod}$ dengan kompleksitas waktu $O(\log_2(exp))$ 
 
 ## 🔄 Arsitektur & Alur Kerja Sistem (Workflow)
 
-Berikut adalah diagram alir pertukaran data antara Karyawan dan HRD:
+### Arsitektur Komponen
 
+```mermaid
+flowchart TD
+    subgraph Karyawan["👤 Portal Karyawan"]
+        KG["Generate pasangan kunci RSA<br/>(p, q → e, d, n)"]
+        PUB["Public Key<br/>(e, n)"]
+        PRIV["Private Key<br/>(d, n)"]
+        LOAD["Muat file .enc"]
+        VIEW["Tampilkan slip gaji"]
+        KG --> PUB
+        KG --> PRIV
+        LOAD --> VIEW
+    end
+
+    subgraph HRD["🏢 Portal HRD"]
+        FORM["Form data slip gaji"]
+        ENC["RSAMathEngine<br/>enkripsi per blok"]
+        FORM --> ENC
+    end
+
+    subgraph Paket["📦 Media Distribusi"]
+        FILE["slip_gaji_[NIK].enc<br/>metadata + ciphertext"]
+    end
+
+    INSPECT["🔬 RSA Math Inspector<br/>log pembangkitan kunci,<br/>enkripsi, dan dekripsi"]
+
+    PUB -->|"bagikan kunci publik"| ENC
+    ENC -->|"simpan paket terenkripsi"| FILE
+    FILE -->|"kirim melalui media apa pun"| LOAD
+    PRIV -. "hanya disimpan karyawan" .-> LOAD
+    KG -. "catat proses" .-> INSPECT
+    ENC -. "catat proses" .-> INSPECT
+    LOAD -. "catat proses" .-> INSPECT
+
+    classDef key fill:#dbeafe,stroke:#2563eb,color:#1e3a8a;
+    classDef process fill:#dcfce7,stroke:#16a34a,color:#14532d;
+    classDef file fill:#fef3c7,stroke:#d97706,color:#78350f;
+    class PUB,PRIV key;
+    class KG,FORM,ENC,LOAD,VIEW,INSPECT process;
+    class FILE file;
 ```
-+-----------------------------------------------------------------------------------+
-|                               PORTAL KARYAWAN                                     |
-+-----------------------------------------------------------------------------------+
-  1. Generate Pasangan Kunci RSA (64-bit primes)
-     --> Dihasilkan Public Key (e, n) & Private Key (d, n)
-  2. Publikasikan Public Key (e, n) ke HRD (Private Key 'd' disimpan sendiri)
-                                      |
-                                      | (Kirim e, n)
-                                      v
-+-----------------------------------------------------------------------------------+
-|                                  PORTAL HRD                                       |
-+-----------------------------------------------------------------------------------+
-  3. HRD mengisi formulir slip gaji (NIK, Nama, Gaji Pokok, Tunjangan, Pajak, BPJS)
-  4. Serialisasi data ke format JSON string -> konversi ke UTF-8 Byte Stream
-  5. Pecah byte menjadi blok-blok m_i (ukuran blok < modulus n)
-  6. Enkripsi tiap blok: c_i = (m_i ^ e) mod n
-  7. Simpan paket data ke berkas terenkripsi: slip_gaji_[NIK].enc
-                                      |
-                                      | (Kirim slip_gaji_[NIK].enc)
-                                      v
-+-----------------------------------------------------------------------------------+
-|                               PORTAL KARYAWAN                                     |
-+-----------------------------------------------------------------------------------+
-  8. Karyawan memuat berkas .enc
-  9. Karyawan memasukkan Private Key (d) & Modulus (n)
- 10. Dekripsi per blok: m_i = (c_i ^ d) mod n
- 11. Rekonstruksi blok integer m_i kembali ke byte UTF-8
- 12. Parse JSON & Render kartu slip gaji resmi dalam format tabel rapi
+
+### Alur Enkripsi hingga Dekripsi
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant K as 👤 Karyawan
+    participant A as Aplikasi RSA
+    participant H as 🏢 HRD
+    participant F as 📦 Berkas .enc
+
+    K->>A: Generate key pair dari p dan q (64-bit)
+    A-->>K: Public Key (e, n) dan Private Key (d, n)
+    K->>H: Bagikan Public Key (e, n)
+    Note over K: Private Key (d, n) tetap rahasia
+
+    H->>A: Isi data slip gaji
+    A->>A: Serialisasi data → JSON UTF-8
+    A->>A: Pecah byte menjadi blok mᵢ dengan ukuran lebih kecil dari n
+    A->>A: Enkripsi setiap blok: cᵢ = mᵢᵉ mod n
+    A->>F: Simpan metadata dan ciphertext ke slip_gaji_[NIK].enc
+
+    F-->>K: Distribusi file terenkripsi
+    K->>A: Muat .enc + masukkan Private Key (d, n)
+    A->>A: Dekripsi setiap blok: mᵢ = cᵢᵈ mod n
+    A->>A: Rekonstruksi byte UTF-8 dan parse JSON
+    alt Kunci benar dan file valid
+        A-->>K: Render slip gaji resmi
+    else Kunci salah atau file rusak
+        A-->>K: Tampilkan peringatan dekripsi/validasi
+    end
 ```
 
 ---
@@ -224,7 +266,7 @@ Hasil enkripsi diekspor ke file JSON berformat `.enc` yang memuat:
 Fungsi dekripsi diimplementasikan pada `RSAMathEngine.decrypt_bytes()` dan dipanggil melalui handler `_handle_decrypt_payroll()` pada antarmuka Karyawan.
 
 ### 1. Pembacaan Berkas `.enc` dan Validasi Kunci
-Pengguna memilih berkas `.enc`, kemudian menginputkan parameter Private Key miliknya:
+Pengguna memilih file `.enc`, kemudian menginputkan parameter Private Key miliknya:
 - Eksponen privat: $d$
 - Modulus: $n$
 
@@ -240,7 +282,7 @@ Untuk setiap blok ciphertext $c_i$:
 ### 3. Rekonstruksi & Proteksi Integritas Data
 - Seluruh byte array didecode ke string UTF-8: `decrypted_bytes.decode("utf-8")`.
 - String diuraikan kembali ke objek JSON melalui `json.loads()`.
-- **Integritas Otomatis:** Apabila kunci privat $d$ yang dimasukkan salah meskipun hanya 1 digit, hasil perhitungan matematika modulo akan menghasilkan urutan byte acak yang bukan merupakan teks UTF-8 atau struktur JSON yang valid. Aplikasi akan segera menangkap exception `json.JSONDecodeError` dan memberi peringatan bahwa kunci salah atau berkas telah dimanipulasi.
+- **Integritas Otomatis:** Apabila kunci privat $d$ yang dimasukkan salah meskipun hanya 1 digit, hasil perhitungan matematika modulo akan menghasilkan urutan byte acak yang bukan merupakan teks UTF-8 atau struktur JSON yang valid. Aplikasi akan segera menangkap exception `json.JSONDecodeError` dan memberi peringatan bahwa kunci salah atau file telah dimanipulasi.
 
 ---
 
@@ -250,8 +292,8 @@ Aplikasi dibangun menggunakan **Python Tkinter (`ttk`)** dengan tema visual berg
 
 ### 1. Portal Karyawan
 * **Generator Pasangan Kunci RSA:** Menghasilkan pasangan $(e, n)$ dan $(d, n)$ berukuran 128-bit secara instan hanya dengan 1 tombol klik.
-* **Simpan Kunci:** Fitur untuk mengekspor kunci privat dan publik ke dalam berkas `.json` lokal.
-* **Dekripsi File `.enc`:** Memuat berkas slip gaji terenkripsi, mengisikan parameter $d$ dan $n$, lalu melakukan dekripsi.
+* **Simpan Kunci:** Fitur untuk mengekspor kunci privat dan publik ke dalam file `.json` lokal.
+* **Dekripsi File `.enc`:** Memuat file slip gaji terenkripsi, mengisikan parameter $d$ dan $n$, lalu melakukan dekripsi.
 * **Viewer Slip Gaji Resmi:** Menampilkan rincian kompensasi dalam format layout ASCII formal (Pendapatan Kotor, Potongan Pajak, BPJS, dan Gaji Bersih / *Take Home Pay*).
 
 ### 2. Portal HRD
@@ -304,50 +346,45 @@ KRIPTO ENSKRIPSI DEKRIPSI/
 
 ---
 
-## 🚀 Panduan Instalasi & Pengoperasian
+## 🚀 Requirements & Cara Run
 
-### Kebutuhan Sistem
-* **Sistem Operasi:** Windows 10/11, Linux, atau macOS.
 * **Python Runtime:** Python 3.8 atau yang lebih baru.
-* **Library Tambahan:** **TIDAK DIBUTUHKAN** (Menggunakan pustaka standar Python: `sys`, `os`, `json`, `random`, `tkinter`, `datetime`).
 
-### Cara Menjalankan Aplikasi
-1. Buka terminal (*Command Prompt* / *PowerShell* / *Bash*).
+1. Buka terminal
 2. Arahkan direktori ke folder proyek:
    ```bash
-   cd "KRIPTO ENSKRIPSI DEKRIPSI"
+   cd "Kriptografi-Implementasi-RSA"
    ```
-3. Eksekusi program dengan Python:
+3. Run dengan Python:
    ```bash
    python implementationRSA.py
    ```
 
 ---
 
-### Skenario Simulasi Langkah demi Langkah
+### Panduan Menggunakan Aplikasi
 
 #### Tahap 1: Pembangkitan Kunci oleh Karyawan
 1. Buka tab **👤 Portal Karyawan**.
 2. Klik tombol **🔑 Generate New Key Pair (64-bit)**.
 3. Pasangan kunci akan muncul di layar:
-   - Kotak abu-abu: Public Key Karyawan $(e, n)$.
-   - Kotak merah muda: Private Key Karyawan $(d, n)$.
-4. *(Opsional)* Simpan kunci ke berkas cadangan melalui tombol **💾 Simpan Kunci**.
+   - Public Key Karyawan $(e, n)$.
+   - Private Key Karyawan $(d, n)$.
+4. *(Opsional)* Simpan kunci ke file cadangan melalui tombol **💾 Simpan Kunci**.
 
 #### Tahap 2: Input & Enkripsi Data oleh HRD
-1. Beralih ke tab **🏢 Portal HRD**.
-2. Klik tombol **📥 Salin Otomatis dari Tab Karyawan** (atau ketikkan $e$ dan $n$ manual).
-3. Isi data gaji karyawan (misal: NIK `IT-2024-001`, Nama `Nindy Pratama`, Gaji Pokok `Rp 12.500.000`).
+1. Pindah ke tab **🏢 Portal HRD**.
+2. Klik tombol **📥 Salin Otomatis dari Tab Karyawan** untuk langsung mendapatkan Public Key Karyawan (atau ketikkan $e$ dan $n$ manual).
+3. Isi Semua Detail Data Gaji Karyawan.
 4. Klik tombol **🔒 Enkripsi Data Slip Gaji Sekarang**.
-5. Nilai ciphertext per blok akan langsung muncul di kotak pratinjau.
-6. Klik tombol **📤 Simpan File .enc** dan simpan file dengan nama `slip_gaji_IT-2024-001.enc`.
+5. Nilai ciphertext per blok akan langsung muncul.
+6. Klik tombol **📤 Simpan File .enc** dibawah.
 
 #### Tahap 3: Dekripsi & Pemeriksaan Slip oleh Karyawan
 1. Kembali ke tab **👤 Portal Karyawan**.
-2. Pada bagian *2. Dekripsi File Slip Gaji (.enc)*, klik **📂 Load File .enc** lalu pilih file `slip_gaji_IT-2024-001.enc`.
-3. Pastikan kolom **Input Private Key (d)** dan **Input Modulus (n)** telah terisi dengan kunci privat milik karyawan.
-4. Klik tombol hijau **🔓 Dekripsi & Tampilkan Slip Gaji**.
-5. Pada panel sisi kanan, **Slip Gaji Resmi** akan berhasil ditampilkan dengan seluruh rincian nominal yang akurat dan rapi.
+2. Pada bagian *2. Dekripsi File Slip Gaji (.enc)*, klik **📂 Load File .enc** lalu pilih file **`.enc`** yang tadi disimpan.
+3. Klik tombol hijau **🔓 Dekripsi & Tampilkan Slip Gaji**.
+4. Pada panel sisi kanan, **Slip Gaji Resmi** akan ditampilkan dengan seluruh rincian nominal yang akurat dan rapi.
 
 #### Tahap 4: Pembuktian Matematis di Inspector
 1. Buka tab **🔬 RSA Math Inspector**.
@@ -355,14 +392,64 @@ KRIPTO ENSKRIPSI DEKRIPSI/
 
 ---
 
-## 🛡️ Analisis Keamanan & Ruang Pengembangan
+## 🛡️ Analisis Keamanan & Pengembangan
 
-| Aspek | Kondisi Saat Ini (Implementasi Proyek) | Standar Industri / Rekomendasi Masa Depan |
+| Aspek | Kondisi Saat Ini (Implementasi Proyek) | Standar Industri / Rekomendasi |
 |---|---|---|
-| **Panjang Kunci Modulus** | $\approx 128$ bit ($p, q$ masing-masing 64-bit) untuk demonstrasi komputasi instan di Python. | 2048-bit atau 4096-bit untuk proteksi komersial jangka panjang terhadap faktorisasi GNFS. |
+| **Panjang Kunci Modulus** | $\approx 128$ bit ($p, q$ masing-masing 64-bit) untuk demo saja. | 2048-bit atau 4096-bit untuk proteksi komersial jangka panjang. |
 | **Metode Padding** | Skema pembagian blok langsung (*Direct Byte Chunking* $m_i < n$). | Menggunakan skema padding standar seperti **OAEP (*Optimal Asymmetric Encryption Padding*)** untuk mencegah serangan *Chosen Ciphertext Attack (CCA)*. |
 | **Kriptografi Hibrida** | Full RSA untuk seluruh data JSON. | Menggunakan skema *Hybrid Cryptography* (Enkripsi simetris AES-GCM untuk payload, dan kunci AES dienkripsi menggunakan RSA) jika ukuran data dokumen sangat besar. |
-| **Tanda Tangan Digital** | Verifikasi integritas melalui struktur JSON parsial. | Menambahkan fitur *Digital Signature* (HRD menandatangani berkas menggunakan Private Key HRD, karyawan memverifikasi dengan Public Key HRD) untuk menjamin aspek *Non-Repudiation*. |
+| **Tanda Tangan Digital** | Verifikasi integritas melalui struktur JSON parsial. | Menambahkan fitur *Digital Signature* (HRD menandatangani file menggunakan Private Key HRD, karyawan memverifikasi dengan Public Key HRD). |
+
+---
+
+## Pertanyaan yang Sering Diajukan (FAQ)
+### 1. RSA kan algoritma yang hanya menghitung angka, kenapa karakter Huruf dan Simbol Ikut Terenkripsi?
+
+> Penjelasan:
+Huruf sebenarnya tidak pernah ada. Semua teks di layar adalah representasi deretan biner (bytes) berbasis tabel ASCII/UTF-8.
+Misal kata "GAJI" terdiri dari 4 biner byte: [71, 65, 74, 73]. Keempat byte ini diperlakukan sebagai satu bilangan bulat besar (Big Integer) dengan notasi basis 256:
+$$m = (71 \times 256^3) + (65 \times 256^2) + (74 \times 256^1) + (73 \times 256^0) = 1.195.461.193$$
+Nilai integer $1.195.461.193$ lah yang menjadi nilai $m$ pada rumus matematika RSA $c = m^e \pmod n$. Jadi, program kami tetap murni menghitung angka.
+
+**Kesimpulan: Jika ID dan Nama dibiarkan plaintext, attacker di jaringan bisa menukar potongan ciphertext gaji Direktur dengan gaji milik karyawan tanpa memecahkan kuncinya.**
+
+Selain itu, Catatan HRD (misalnya alasan pemotongan disiplin atau bonus rahasia) merupakan data privasi karyawan.
+Dengan membungkus seluruh slip gaji dalam satu JSON lalu mengenkripsinya secara utuh (envelope encryption), dokumen tersebut menjadi satu kesatuan yang tidak bisa dimanipulasi per bagian.
+
+
+### Q2. Form Gaji Hanya 9 Isian, Tapi kok Ciphertext-nya Muncul 20+ Blok?
+
+**A2. Aturan Matematis Batas Ukuran Blok ($m_i < n$):**
+- Ukuran Modulus $n$ Kita 128-bit : dari dua bilangan 64-bit ($p$ dan $q$).
+$n = p \times q \approx 128\text{ bit}$.
+- Kapasitas Maks 1 Blok : Satu byte adalah 8 bit, Maka kapasitas maksimal data yang dijamin bernilai $m_i < n$ adalah:
+$$\text{Ukuran Blok} = \left\lfloor \frac{128 - 1}{8} \right\rfloor = 15\text{ byte (atau 15 karakter)}$$
+- Panjang JSON yang Dihasilkan dari 9 data form HRD disusun kedalam format JSON memiliki sekitar 330 karakter (330 byte):
+```json
+{
+    "nik":"IT-2024-001",
+    "nama":"Fauzan",
+    "jabatan":"Senior Network & Security Engineer",
+    "periode":"Oktober 2026",
+    "rincian":{
+        "gaji_pokok":12500000.0,
+        "tunjangan":3500000.0,
+        "potongan_bpjs":450000.0,
+        "potongan_pph":650000.0,
+        "take_home_pay":14900000.0
+    },
+    "catatan":"Semoga berkah.",
+    "timestamp":"2026-10-08T14:30:00"
+}
+```
+
+- Perhitungan Jumlah Blok:
+$$
+    \text{Jumlah Blok} = \left\lceil \frac{330\text{ byte}}{15\text{ byte per blok}} \right\rceil \approx 22\text{ blok}
+$$
+Setiap 15 karakter dipotong menjadi satu bilangan bulat $m_i$, lalu masing-masing dipangkatkan dengan $e$ modulo $n$ menghasilkan satu nilai $c_i$. Itulah alasan mengapa muncul 22 baris angka ciphertext. 
+
 
 ---
 

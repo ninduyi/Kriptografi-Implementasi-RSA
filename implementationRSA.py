@@ -1,16 +1,3 @@
-"""
-=============================================================================
-SISTEM SLIP GAJI DIGITAL TERENKRIPSI BERBASIS RSA (MANUAL DARI NOL)
-Mata Kuliah : Kriptografi
-Implementasi: RSA Murni (Tanpa Library Kripto Eksternal) + GUI Tkinter
-
-Anggota Kelompok:
-1. Naufal Ardhana          (5027241118)
-2. Imam Mahmud Dalil Fauzan (5027241100)
-3. Nabilah Anindya         (5027241006)
-=============================================================================
-"""
-
 import sys
 import os
 import json
@@ -20,7 +7,7 @@ from tkinter import ttk, messagebox, filedialog
 from datetime import datetime
 
 # =============================================================================
-# BAGIAN 1: RSA MATH ENGINE (DIKERJAKAN SECARA MANUAL DARI TEORI BILANGAN)
+# BAGIAN 1: RSA MATH ENGINE
 # =============================================================================
 
 class RSAMathEngine:
@@ -35,7 +22,7 @@ class RSAMathEngine:
 
     @staticmethod
     def gcd(a: int, b: int) -> int:
-        """Pembagi Bersama Terbesar (PBB / GCD) menggunakan Algoritma Euclidean."""
+        """PBB"""
         while b != 0:
             a, b = b, a % b
         return a
@@ -44,7 +31,7 @@ class RSAMathEngine:
     def extended_gcd(a: int, b: int):
         """
         Extended Euclidean Algorithm:
-        Mencari nilai x dan y sedemikian sehingga: a*x + b*y = gcd(a, b)
+        Mencari nilai x dan y sehingga: a*x + b*y = gcd(a, b)
         """
         if a == 0:
             return b, 0, 1
@@ -119,7 +106,7 @@ class RSAMathEngine:
 
     @staticmethod
     def generate_prime(bits: int = 64) -> int:
-        """Membangkitkan bilangan prima acak berukuran n-bit."""
+        """Membuat bilangan prima acak berukuran n-bit."""
         small_primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47]
         while True:
             # Pastikan bit tertinggi dan terendah bernilai 1 (ganjil dan sesuai rentang bit)
@@ -133,7 +120,7 @@ class RSAMathEngine:
     @classmethod
     def generate_keypair(cls, bits: int = 64):
         """
-        Membangkitkan pasangan kunci RSA:
+        Membuat pasangan kunci RSA:
         Returns: (p, q, n, phi, e, d)
         """
         p = cls.generate_prime(bits)
@@ -206,7 +193,7 @@ class RSAMathEngine:
 
 
 # =============================================================================
-# BAGIAN 2: ANTARMUKA GRAFIS (GUI DENGAN TKINTER)
+# BAGIAN 2: GUI
 # =============================================================================
 
 class SecurePayrollApp(tk.Tk):
@@ -252,7 +239,7 @@ class SecurePayrollApp(tk.Tk):
         lbl_title.pack(anchor=tk.W, padx=20, pady=(10, 2))
 
         lbl_subtitle = tk.Label(
-            banner, text="Studi Kasus RSA: Pembagian Slip Gaji Karyawan dari HRD yang Terenkripsi",
+            banner, text="Pembagian Slip Gaji Karyawan dari HRD yang Terenkripsi",
             font=("Segoe UI", 9), fg="#94a3b8", bg="#1e293b"
         )
         lbl_subtitle.pack(anchor=tk.W, padx=20)
@@ -352,7 +339,7 @@ class SecurePayrollApp(tk.Tk):
         left_col.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 8))
 
         entries_spec = [
-            ("NIK Karyawan", "nik", "IT-2024-001"),
+            ("ID Karyawan", "id", "IT-2024-001"),
             ("Nama Lengkap", "nama", "Masukkan Nama"),
             ("Jabatan / Posisi", "jabatan", "Senior Network & Security Engineer"),
             ("Periode Penggajian", "periode", "Oktober 2026"),
@@ -430,7 +417,7 @@ class SecurePayrollApp(tk.Tk):
         self._log_math("Semua tahapan perhitungan dicatat dalam Log ini.\n")
 
     # =========================================================================
-    # EVENT HANDLERS & LOGIKA BISNIS
+    # EVENT HANDLERS & LOGIC
     # =========================================================================
 
     def _log_math(self, text: str):
@@ -543,7 +530,7 @@ class SecurePayrollApp(tk.Tk):
             take_home_pay = (gaji_pokok + tunjangan) - (potongan_bpjs + potongan_pph)
 
             payroll_dict = {
-                "nik": self.hrd_entries["nik"].get().strip(),
+                "id": self.hrd_entries["id"].get().strip(),
                 "nama": self.hrd_entries["nama"].get().strip(),
                 "jabatan": self.hrd_entries["jabatan"].get().strip(),
                 "periode": self.hrd_entries["periode"].get().strip(),
@@ -567,7 +554,7 @@ class SecurePayrollApp(tk.Tk):
 
             # Siapkan paket dokumen enkripsi
             self.generated_encrypted_payload = {
-                "target_nik": payroll_dict["nik"],
+                "target_nik": payroll_dict["id"],
                 "algorithm": "Manual-RSA-Square-Multiply",
                 "block_byte_size": block_size,
                 "block_lengths": [m["byte_len"] for m in metadata],
@@ -631,7 +618,7 @@ class SecurePayrollApp(tk.Tk):
                 self.loaded_encrypted_data = data
                 fname = os.path.basename(file_path)
                 self.lbl_enc_file_info.config(
-                    text=f"Berkas: {fname} (Target NIK: {data.get('target_nik', '-')}, {len(data['ciphertext'])} blok)",
+                    text=f"Berkas: {fname} (Target ID: {data.get('target_nik', '-')}, {len(data['ciphertext'])} blok)",
                     foreground="#059669"
                 )
                 messagebox.showinfo("Berkas Dimuat", f"Berkas {fname} berhasil dimuat.")
@@ -688,11 +675,11 @@ class SecurePayrollApp(tk.Tk):
         rincian = data["rincian"]
         card_text = (
             "=====================================================================\n"
-            "                 PT. TEKNOLOGI INFORMASI NUSANTARA                   \n"
-            "                     SLIP GAJI RESMI KARYAWAN                        \n"
-            "               STATUS KEAMANAN: RAHASIA / TERVERIFIKASI             \n"
+            "                 PT. TEKNOLOGI INFORMASI JAYA                   \n"
+            "                     SLIP GAJI KARYAWAN                        \n"
+            "               STATUS KEAMANAN: TERVERIFIKASI             \n"
             "=====================================================================\n"
-            f" NIK              : {data.get('nik')}\n"
+            f" ID              : {data.get('id')}\n"
             f" Nama Karyawan    : {data.get('nama')}\n"
             f" Jabatan / Divisi : {data.get('jabatan')}\n"
             f" Periode Gaji     : {data.get('periode')}\n"
