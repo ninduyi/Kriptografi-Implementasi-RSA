@@ -114,7 +114,7 @@ class RSAMathEngine:            # fungsi untuk memproses matematika RSA
             # Saring awal dengan bilangan prima kecil untuk efisiensi
             if any(p % sp == 0 and p != sp for sp in small_primes):
                 continue
-            if RSAMathEngine.is_prime_miller_rabin(p, k=15):  # diuji pake algoritma miller rabin 15x
+            if RSAMathEngine.is_prime_miller_rabin(p, k=15):  # cek apakah prima atau tidak
                 return p
 
     @classmethod
@@ -144,12 +144,12 @@ class RSAMathEngine:            # fungsi untuk memproses matematika RSA
     @classmethod
     def encrypt_bytes(cls, plaintext_bytes: bytes, e: int, n: int):
         """
-        Memecah byte menjadi blok-blok m_i < n, lalu mengenkripsinya:
+        Memecah byte array menjadi blok-blok m_i < n, lalu mengenkripsinya:
         c_i = (m_i ^ e) mod n
         """
         # Ukuran blok byte maksimum: (bit_length - 1) // 8 byte
-        # Menjamin secara matematis m_i < n
-        block_size = max(1, (n.bit_length() - 1) // 8)
+        # Menjamin secara matematis M < n
+        block_size = max(1, (n.bit_length() - 1) // 8) # memecah data menjadi blok-blok kecil agar dapat dienkripsi menggunakan RSA.
         ciphertext_blocks = [] # menyimpan ciphertext hasil enkripsi
         block_metadata = [] # meyimpan informasi tambahan, seperti indeks blok, panjang byte, plaintext integer,
 
@@ -178,18 +178,18 @@ class RSAMathEngine:            # fungsi untuk memproses matematika RSA
         trace_blocks = [] # digunakan untuk menyimpan informasi tambahan, seperti indeks blok, panjang byte, ciphertext integer, dan plaintext integer
 
         for idx, (c_str, b_len) in enumerate(zip(ciphertext_blocks, block_sizes)): # mengiterasi setiap blok ciphertext dan panjang byte
-            c_int = int(c_str) # mengubah blok ciphertext menjadi bilangan bulat
-            m_int = cls.mod_pow(c_int, d, n) # mendekripsi bilangan bulat menggunakan RSA
-            chunk = m_int.to_bytes(b_len, byteorder='big') # mengubah blok data menjadi byte
-            decrypted_bytes.extend(chunk) # menambahkan blok data ke dalam decrypted_bytes
+            c_int = int(c_str)                                                     # mengubah blok ciphertext (str) ke bilangan bulat (int)
+            m_int = cls.mod_pow(c_int, d, n)                                       # mendekripsi bilangan bulat menggunakan RSA
+            chunk = m_int.to_bytes(b_len, byteorder='big')                         # mengubah blok data menjadi byte
+            decrypted_bytes.extend(chunk)                                          # Menggabungkan setiap blok byte hasil dekripsi menjadi plaintext lengkap 
             trace_blocks.append({
-                "index": idx,
-                "c_int": c_int, # Ciphertext integer
-                "m_int": m_int, # Plaintext integer
-                "byte_len": b_len # Panjang byte
+                "index": idx,                                                        # indeks blok
+                "c_int": c_int,                                                      # ciphertext integer
+                "m_int": m_int,                                                      # plaintext integer
+                "byte_len": b_len                                                    # panjang byte
             })
 
-        return bytes(decrypted_bytes), trace_blocks
+        return bytes(decrypted_bytes), trace_blocks                                  # mengembalikan ciphertext menjadi byte asli.
 
 
 # =============================================================================
@@ -518,8 +518,8 @@ class SecurePayrollApp(tk.Tk):
                 messagebox.showerror("Error", "Harap masukkan Public Key Karyawan (e dan n)!")
                 return
 
-            e = int(e_str)
-            n = int(n_str)
+            e = int(e_str)      
+            n = int(n_str)      
 
             # Ambil data dari form HRD
             gaji_pokok = float(self.hrd_entries["gaji_pokok"].get().strip())
