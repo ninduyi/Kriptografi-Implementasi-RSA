@@ -10,7 +10,7 @@ from datetime import datetime
 # BAGIAN 1: RSA MATH ENGINE
 # =============================================================================
 
-class RSAMathEngine:            # fungsi untuk memproses matematika RSA
+class RSAMathEngine:            
     """
     Kelas mesin matematika RSA murni:
     1. Primality Test (Miller-Rabin)
@@ -111,7 +111,7 @@ class RSAMathEngine:            # fungsi untuk memproses matematika RSA
         while True:
             # Pastikan bit tertinggi dan terendah bernilai 1 (ganjil dan sesuai rentang bit)
             p = random.getrandbits(bits) | (1 << (bits - 1)) | 1
-            # Saring awal dengan bilangan prima kecil untuk efisiensi
+            # Saring awal apakah kandidat habis dibagi salah satu prima kecil
             if any(p % sp == 0 and p != sp for sp in small_primes):
                 continue
             if RSAMathEngine.is_prime_miller_rabin(p, k=15):  # cek apakah prima atau tidak
@@ -133,7 +133,7 @@ class RSAMathEngine:            # fungsi untuk memproses matematika RSA
 
         # Pemilihan e standar: 65537 atau dicari iteratif
         e = 65537
-        if cls.gcd(e, phi) != 1:                # memastikan e dan phi relatif prima.
+        if cls.gcd(e, phi) != 1:                # e & phi tidak boleh memiliki faktor persekutuan selain 1
             e = 3
             while cls.gcd(e, phi) != 1:
                 e += 2
@@ -147,11 +147,10 @@ class RSAMathEngine:            # fungsi untuk memproses matematika RSA
         Memecah byte array menjadi blok-blok m_i < n, lalu mengenkripsinya:
         c_i = (m_i ^ e) mod n
         """
-        # Ukuran blok byte maksimum: (bit_length - 1) // 8 byte
-        # Menjamin secara matematis M < n
-        block_size = max(1, (n.bit_length() - 1) // 8) # memecah data menjadi blok-blok kecil agar dapat dienkripsi menggunakan RSA.
-        ciphertext_blocks = [] # menyimpan ciphertext hasil enkripsi
-        block_metadata = [] # meyimpan informasi tambahan, seperti indeks blok, panjang byte, plaintext integer,
+        # Ukuran blok byte maksimum: (bit_length - 1) // 8 byte, M < n agar RSA bisa mengenkripsi
+        block_size = max(1, (n.bit_length() - 1) // 8) 
+        ciphertext_blocks = []
+        block_metadata = [] 
 
         for i in range(0, len(plaintext_bytes), block_size): # memecah data plaintext_bytes menjadi blok-blok kecil.
             chunk = plaintext_bytes[i:i + block_size] #mengambil satu blok data dari plaintext.
@@ -159,10 +158,10 @@ class RSAMathEngine:            # fungsi untuk memproses matematika RSA
             c_int = cls.mod_pow(m_int, e, n) # mengenkripsi bilangan bulat menggunakan RSA
             ciphertext_blocks.append(str(c_int)) # menyimpan hasil enkripsi
             block_metadata.append({
-                "index": i // block_size, #Indeks blok
-                "byte_len": len(chunk), # Panjang byte
-                "m_int": m_int, # Plaintext integer
-                "c_int": c_int # Ciphertext integer
+                "index": i // block_size, 
+                "byte_len": len(chunk), 
+                "m_int": m_int,
+                "c_int": c_int
             })
 
         return ciphertext_blocks, block_size, block_metadata
@@ -183,13 +182,13 @@ class RSAMathEngine:            # fungsi untuk memproses matematika RSA
             chunk = m_int.to_bytes(b_len, byteorder='big')                         # mengubah blok data menjadi byte
             decrypted_bytes.extend(chunk)                                          # Menggabungkan setiap blok byte hasil dekripsi menjadi plaintext lengkap 
             trace_blocks.append({
-                "index": idx,                                                        # indeks blok
-                "c_int": c_int,                                                      # ciphertext integer
-                "m_int": m_int,                                                      # plaintext integer
-                "byte_len": b_len                                                    # panjang byte
+                "index": idx,                                                        
+                "c_int": c_int,                                                    
+                "m_int": m_int,                                                    
+                "byte_len": b_len                                                   
             })
 
-        return bytes(decrypted_bytes), trace_blocks                                  # mengembalikan ciphertext menjadi byte asli.
+        return bytes(decrypted_bytes), trace_blocks                              
 
 
 # =============================================================================
