@@ -46,7 +46,7 @@ class RSAMathEngine:
         Menghitung Private Key d sebagai invers modulo:     
         e * d = 1 (mod phi)
         """
-        gcd_val, x, _ = RSAMathEngine.extended_gcd(e, phi)
+        gcd_val, x, _ = RSAMathEngine.extended_gcd(e, phi) 
         if gcd_val != 1:
             raise ValueError("Invers modulo tidak ditemukan; e dan phi tidak relatif prima.")
         return (x % phi + phi) % phi
@@ -131,9 +131,9 @@ class RSAMathEngine:
         n = p * q
         phi = (p - 1) * (q - 1)                 # menghitung fungsi Euler Totient.
 
-        # Pemilihan e standar: 65537 atau dicari iteratif
+        # Pemilihan e standar: 65537 (punya 2 bit 1 agar enkripsi cepat) atau dicari iteratif
         e = 65537
-        if cls.gcd(e, phi) != 1:                # e & phi tidak boleh memiliki faktor persekutuan selain 1
+        if cls.gcd(e, phi) != 1:                # e & phi tidak boleh memiliki faktor persekutuan selain 1 agar bs menghitung invers modulo
             e = 3
             while cls.gcd(e, phi) != 1:
                 e += 2
